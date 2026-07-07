@@ -1,0 +1,146 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  KASIR
+  PELAYAN
+}
+
+enum PaymentMethod {
+  CASH
+  QRIS
+  DEBIT
+  CREDIT
+  TRANSFER
+}
+
+enum TableStatus {
+  EMPTY
+  OCCUPIED
+}
+
+enum OrderStatus {
+  PENDING
+  COMPLETED
+  CANCELLED
+}
+
+enum KitchenTicketStatus {
+  PENDING
+  PREPARING
+  READY
+  DONE
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  username  String   @unique
+  password  String
+  role      UserRole
+  isActive  Boolean  @default(true)
+  orders    Order[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Category {
+  id        String    @id @default(cuid())
+  name      String    @unique
+  products  Product[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Product {
+  id         String      @id @default(cuid())
+  name       String
+  price      Int
+  emoji      String?
+  imageUrl   String?
+  stock      Int         @default(0)
+  trackStock Boolean     @default(false)
+  categoryId String
+  category   Category    @relation(fields: [categoryId], references: [id])
+  isActive   Boolean     @default(true)
+  orderItems OrderItem[]
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+}
+
+model Table {
+  id             String          @id @default(cuid())
+  number         Int             @unique
+  status         TableStatus     @default(EMPTY)
+  orders         Order[]
+  kitchenTickets KitchenTicket[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+}
+
+model Order {
+  id            String         @id @default(cuid())
+  orderNumber   String         @unique
+  subtotal      Int
+  tax           Int
+  taxRate       Float          @default(0.11)
+  total         Int
+  paymentMethod PaymentMethod
+  cashReceived  Int?
+  changeAmount  Int?
+  tableId       String?
+  table         Table?         @relation(fields: [tableId], references: [id])
+  userId        String?
+  user          User?          @relation(fields: [userId], references: [id])
+  status        OrderStatus    @default(COMPLETED)
+  items         OrderItem[]
+  kitchenTicket KitchenTicket?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+model OrderItem {
+  id          String   @id @default(cuid())
+  orderId     String
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId   String?
+  product     Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  productName String
+  price       Int
+  quantity    Int
+  subtotal    Int
+}
+
+model KitchenTicket {
+  id           String              @id @default(cuid())
+  ticketNumber String              @unique
+  orderId      String              @unique
+  order        Order               @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  tableId      String?
+  table        Table?              @relation(fields: [tableId], references: [id])
+  status       KitchenTicketStatus @default(PENDING)
+  items        KitchenTicketItem[]
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+}
+
+model KitchenTicketItem {
+  id              String        @id @default(cuid())
+  kitchenTicketId String
+  kitchenTicket   KitchenTicket @relation(fields: [kitchenTicketId], references: [id], onDelete: Cascade)
+  productName     String
+  quantity        Int
+}
+
+model Setting {
+  id    String @id @default(cuid())
+  key   String @unique
+  value String
+}
