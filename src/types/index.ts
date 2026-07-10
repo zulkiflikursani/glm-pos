@@ -1,4 +1,9 @@
-import type { KitchenTicketStatus, PaymentMethod, UserRole } from "@prisma/client";
+// Tipe union pengganti enum Prisma (SQLite tidak mendukung enum native)
+export type UserRole = "ADMIN" | "KASIR" | "PELAYAN" | "DAPUR";
+export type PaymentMethod = "CASH" | "QRIS" | "DEBIT" | "CREDIT" | "TRANSFER";
+export type TableStatus = "EMPTY" | "OCCUPIED" | "RESERVED" | "CLEANING";
+export type OrderStatus = "PENDING" | "COMPLETED" | "CANCELLED";
+export type KitchenTicketStatus = "PENDING" | "PREPARING" | "READY" | "DONE";
 
 export type ProductWithCategory = {
   id: string;
@@ -23,7 +28,30 @@ export type CategoryOption = {
 export type TableOption = {
   id: string;
   number: number;
-  status: "EMPTY" | "OCCUPIED";
+  status: TableStatus;
+};
+
+export type TableDetailView = {
+  id: string;
+  number: number;
+  status: TableStatus;
+  currentOrder: {
+    id: string;
+    orderNumber: string;
+    total: number;
+    createdAt: Date;
+    items: { productName: string; quantity: number }[];
+  } | null;
+  activeTicket: {
+    id: string;
+    ticketNumber: string;
+    status: KitchenTicketStatus;
+  } | null;
+};
+
+export type TableStatusUpdateInput = {
+  id: string;
+  status: TableStatus;
 };
 
 export type CartItem = {
@@ -140,6 +168,52 @@ export type UserFormInput = {
   password?: string;
   role: UserRole;
   isActive?: boolean;
+};
+
+// --- Stok & Resep (Fase 4) ---
+
+export type AdminIngredient = {
+  id: string;
+  name: string;
+  unit: string;
+  stock: number;
+  unitCost: number;
+  isActive: boolean;
+};
+
+export type IngredientFormInput = {
+  name: string;
+  unit: string;
+  stock?: number;
+  unitCost?: number;
+  isActive?: boolean;
+};
+
+export type AdminRecipeItemView = {
+  id: string;
+  ingredientId: string;
+  ingredientName: string;
+  unit: string;
+  quantity: number;
+};
+
+export type AdminRecipe = {
+  id: string;
+  productId: string;
+  productName: string;
+  items: AdminRecipeItemView[];
+  /** HPP = total (unitCost * quantity) bahan pada resep */
+  cost: number;
+};
+
+export type RecipeItemInput = {
+  ingredientId: string;
+  quantity: number;
+};
+
+export type RecipeFormInput = {
+  productId: string;
+  items: RecipeItemInput[];
 };
 
 export type KitchenTicketView = {

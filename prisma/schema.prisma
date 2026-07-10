@@ -7,44 +7,13 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum UserRole {
-  ADMIN
-  KASIR
-  PELAYAN
-}
-
-enum PaymentMethod {
-  CASH
-  QRIS
-  DEBIT
-  CREDIT
-  TRANSFER
-}
-
-enum TableStatus {
-  EMPTY
-  OCCUPIED
-}
-
-enum OrderStatus {
-  PENDING
-  COMPLETED
-  CANCELLED
-}
-
-enum KitchenTicketStatus {
-  PENDING
-  PREPARING
-  READY
-  DONE
-}
-
 model User {
   id        String   @id @default(cuid())
   name      String
   username  String   @unique
   password  String
-  role      UserRole
+  /// String (SQLite tidak mendukung enum): "ADMIN" | "KASIR" | "PELAYAN" | "DAPUR"
+  role      String
   isActive  Boolean  @default(true)
   orders    Order[]
   createdAt DateTime @default(now())
@@ -71,14 +40,56 @@ model Product {
   category   Category    @relation(fields: [categoryId], references: [id])
   isActive   Boolean     @default(true)
   orderItems OrderItem[]
+  recipe     Recipe?
   createdAt  DateTime    @default(now())
   updatedAt  DateTime    @updatedAt
+}
+
+/// Bahan mentah (raw material) — stok bahan baku yang dipakai untuk membuat produk jadi.
+/// Contoh: Beras 1 kg, Telur 1 butir, Minyak 1 liter.
+/// Stok diukur dalam `unit` (kg, gram, liter, ml, butir, dll) dan dikurangi otomatis
+/// saat sebuah produk yang punya resep terjual, sesuai qty bahan pada resep tersebut.
+model Ingredient {
+  id        String       @id @default(cuid())
+  name      String       @unique
+  unit      String
+  stock     Float        @default(0)
+  /// Harga beli per 1 unit (dasar perhitungan HPP)
+  unitCost  Int          @default(0)
+  isActive  Boolean      @default(true)
+  items     RecipeItem[]
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+}
+
+/// Resep untuk satu produk jadi. Satu produk maksimal punya satu resep.
+/// HPP produk = total (ingredient.unitCost * quantity) dari semua RecipeItem.
+/// Saat produk terjual, stok tiap bahan pada resep dikurangi sesuai quantity * qty item order.
+model Recipe {
+  id        String       @id @default(cuid())
+  productId String       @unique
+  product   Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+  items     RecipeItem[]
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+}
+
+/// Satu baris bahan dalam resep: bahan + quantity yang dibutuhkan per 1 porsi produk.
+model RecipeItem {
+  id           String     @id @default(cuid())
+  recipeId     String
+  recipe       Recipe     @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  ingredientId String
+  ingredient   Ingredient @relation(fields: [ingredientId], references: [id])
+  /// Jumlah bahan yang dipakai per 1 porsi produk, dalam unit bahan tersebut.
+  quantity     Float
 }
 
 model Table {
   id             String          @id @default(cuid())
   number         Int             @unique
-  status         TableStatus     @default(EMPTY)
+  /// String (SQLite tidak mendukung enum): "EMPTY" | "OCCUPIED"
+  status         String          @default("EMPTY")
   orders         Order[]
   kitchenTickets KitchenTicket[]
   createdAt      DateTime        @default(now())
@@ -92,14 +103,16 @@ model Order {
   tax           Int
   taxRate       Float          @default(0.11)
   total         Int
-  paymentMethod PaymentMethod
+  /// String (SQLite tidak mendukung enum): "CASH" | "QRIS" | "DEBIT" | "CREDIT" | "TRANSFER"
+  paymentMethod String
   cashReceived  Int?
   changeAmount  Int?
   tableId       String?
   table         Table?         @relation(fields: [tableId], references: [id])
   userId        String?
   user          User?          @relation(fields: [userId], references: [id])
-  status        OrderStatus    @default(COMPLETED)
+  /// String (SQLite tidak mendukung enum): "PENDING" | "COMPLETED" | "CANCELLED"
+  status        String         @default("COMPLETED")
   items         OrderItem[]
   kitchenTicket KitchenTicket?
   createdAt     DateTime       @default(now())
@@ -125,7 +138,8 @@ model KitchenTicket {
   order        Order               @relation(fields: [orderId], references: [id], onDelete: Cascade)
   tableId      String?
   table        Table?              @relation(fields: [tableId], references: [id])
-  status       KitchenTicketStatus @default(PENDING)
+  /// String (SQLite tidak mendukung enum): "PENDING" | "PREPARING" | "READY" | "DONE"
+  status       String              @default("PENDING")
   items        KitchenTicketItem[]
   createdAt    DateTime            @default(now())
   updatedAt    DateTime            @updatedAt

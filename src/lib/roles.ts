@@ -1,9 +1,10 @@
-import type { UserRole } from "@prisma/client";
+import type { UserRole } from "@/types";
 
 export const ROLE_LABELS: Record<UserRole, string> = {
   ADMIN: "Admin",
   KASIR: "Kasir",
   PELAYAN: "Pelayan",
+  DAPUR: "Dapur",
 };
 
 export function canAccessRoute(pathname: string, role: UserRole): boolean {
@@ -12,9 +13,17 @@ export function canAccessRoute(pathname: string, role: UserRole): boolean {
     return role === "ADMIN" || role === "KASIR";
   }
   if (pathname.startsWith("/kitchen")) {
-    return role === "ADMIN" || role === "KASIR";
+    return role === "ADMIN" || role === "DAPUR" || role === "PELAYAN";
   }
-  return role === "ADMIN" || role === "KASIR" || role === "PELAYAN";
+  if (pathname.startsWith("/tables")) {
+    return role === "ADMIN" || role === "KASIR" || role === "PELAYAN";
+  }
+  return (
+    role === "ADMIN" ||
+    role === "KASIR" ||
+    role === "PELAYAN" ||
+    role === "DAPUR"
+  );
 }
 
 export type SessionUser = {

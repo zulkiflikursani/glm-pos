@@ -1,6 +1,5 @@
 "use server";
 
-import { KitchenTicketStatus, PaymentMethod } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 
 import { getSession } from "@/lib/auth";
@@ -10,6 +9,7 @@ import type {
   CategoryOption,
   CreateOrderInput,
   KitchenTicketView,
+  KitchenTicketStatus,
   OrderResult,
   ProductWithCategory,
   TableOption,
@@ -77,7 +77,9 @@ function generateTicketNumber(): string {
 
 export async function createOrder(
   input: CreateOrderInput,
-): Promise<{ success: true; order: OrderResult } | { success: false; error: string }> {
+): Promise<
+  { success: true; order: OrderResult } | { success: false; error: string }
+> {
   if (!input.items.length) {
     return { success: false, error: "Keranjang masih kosong." };
   }
@@ -91,7 +93,7 @@ export async function createOrder(
   const tax = Math.round(subtotal * taxRate);
   const total = subtotal + tax;
 
-  if (input.paymentMethod === PaymentMethod.CASH) {
+  if (input.paymentMethod === "CASH") {
     if (!input.cashReceived || input.cashReceived < total) {
       return {
         success: false,
@@ -103,14 +105,35 @@ export async function createOrder(
   const productIds = input.items.map((item) => item.productId);
   const products = await prisma.product.findMany({
     where: { id: { in: productIds } },
-    select: { id: true, name: true, stock: true, trackStock: true },
+    select: {
+      id: true,
+      name: true,
+      stock: true,
+      trackStock: true,
+      recipe: {
+        select: {
+          items: {
+            select: {
+              quantity: true,
+              ingredient: {
+                select: { id: true, name: true, stock: true, unit: true },
+              },
+            },
+          },
+        },
+      },
+    },
   });
   const productMap = new Map(products.map((p) => [p.id, p]));
 
+  // Validasi stok produk jadi (trackStock)
   for (const item of input.items) {
     const product = productMap.get(item.productId);
     if (!product) {
-      return { success: false, error: `Produk "${item.productName}" tidak ditemukan.` };
+      return {
+        success: false,
+        error: `Produk "${item.productName}" tidak ditemukan.`,
+      };
     }
     if (product.trackStock && product.stock < item.quantity) {
       return {
@@ -120,10 +143,45 @@ export async function createOrder(
     }
   }
 
+  // Hitung total kebutuhan tiap bahan mentah dari semua item order (berdasarkan resep)
+  // dan validasi stok bahan mentah cukup.
+  const ingredientNeeds = new Map<
+    string,
+    { name: string; unit: string; need: number; stock: number }
+  >();
+  for (const item of input.items) {
+    const product = productMap.get(item.productId)!;
+    const recipe = product.recipe;
+    if (!recipe) continue; // produk tanpa resep → tidak deduksi bahan
+
+    for (const ri of recipe.items) {
+      const need = ri.quantity * item.quantity;
+      const prev = ingredientNeeds.get(ri.ingredient.id);
+      if (prev) {
+        prev.need += need;
+      } else {
+        ingredientNeeds.set(ri.ingredient.id, {
+          name: ri.ingredient.name,
+          unit: ri.ingredient.unit,
+          need,
+          stock: ri.ingredient.stock,
+        });
+      }
+    }
+  }
+
+  for (const [, need] of ingredientNeeds) {
+    if (need.need > need.stock) {
+      return {
+        success: false,
+        error: `Bahan "${need.name}" tidak cukup (butuh ${need.need} ${need.unit}, tersisa ${need.stock} ${need.unit}).`,
+      };
+    }
+  }
+
   const cashReceived =
-    input.paymentMethod === PaymentMethod.CASH ? input.cashReceived! : null;
-  const changeAmount =
-    cashReceived !== null ? cashReceived - total : null;
+    input.paymentMethod === "CASH" ? input.cashReceived! : null;
+  const changeAmount = cashReceived !== null ? cashReceived - total : null;
 
   try {
     const order = await prisma.$transaction(async (tx) => {
@@ -135,6 +193,14 @@ export async function createOrder(
             data: { stock: { decrement: item.quantity } },
           });
         }
+      }
+
+      // Deduksi stok bahan mentah sesuai resep tiap produk
+      for (const [ingredientId, need] of ingredientNeeds) {
+        await tx.ingredient.update({
+          where: { id: ingredientId },
+          data: { stock: { decrement: need.need } },
+        });
       }
 
       if (input.tableId) {
@@ -201,7 +267,7 @@ export async function createOrder(
       const ticket: KitchenTicketView = {
         id: order.kitchenTicket.id,
         ticketNumber: order.kitchenTicket.ticketNumber,
-        status: order.kitchenTicket.status,
+        status: order.kitchenTicket.status as KitchenTicketStatus,
         tableNumber: order.kitchenTicket.table?.number ?? null,
         orderNumber: order.orderNumber,
         createdAt: order.kitchenTicket.createdAt,

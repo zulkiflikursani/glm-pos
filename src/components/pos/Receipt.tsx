@@ -1,10 +1,9 @@
 "use client";
 
-import { PaymentMethod } from "@prisma/client";
 import { useRef } from "react";
 
 import { formatIDR } from "@/lib/format";
-import type { OrderResult } from "@/types";
+import type { OrderResult, PaymentMethod } from "@/types";
 
 const PAYMENT_LABELS: Record<PaymentMethod, string> = {
   CASH: "Tunai",

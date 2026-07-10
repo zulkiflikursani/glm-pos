@@ -1,11 +1,10 @@
 "use server";
 
-import { KitchenTicketStatus } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 
 import { prisma } from "@/lib/prisma";
 import { broadcastEvent } from "@/lib/ws-notify";
-import type { KitchenTicketView } from "@/types";
+import type { KitchenTicketView, KitchenTicketStatus } from "@/types";
 
 function toTicketView(
   ticket: Awaited<ReturnType<typeof fetchTickets>>[number],
@@ -13,7 +12,7 @@ function toTicketView(
   return {
     id: ticket.id,
     ticketNumber: ticket.ticketNumber,
-    status: ticket.status,
+    status: ticket.status as KitchenTicketStatus,
     tableNumber: ticket.table?.number ?? null,
     orderNumber: ticket.order.orderNumber,
     createdAt: ticket.createdAt,
@@ -39,12 +38,8 @@ async function fetchTickets(statuses?: KitchenTicketStatus[]) {
 export async function getKitchenTickets(
   activeOnly = true,
 ): Promise<KitchenTicketView[]> {
-  const statuses = activeOnly
-    ? [
-        KitchenTicketStatus.PENDING,
-        KitchenTicketStatus.PREPARING,
-        KitchenTicketStatus.READY,
-      ]
+  const statuses: KitchenTicketStatus[] | undefined = activeOnly
+    ? ["PENDING", "PREPARING", "READY"]
     : undefined;
 
   const tickets = await fetchTickets(statuses);
@@ -66,7 +61,7 @@ export async function updateKitchenTicketStatus(
       },
     });
 
-    if (status === KitchenTicketStatus.DONE) {
+    if (status === "DONE") {
       if (ticket.tableId) {
         await prisma.table.update({
           where: { id: ticket.tableId },
@@ -78,7 +73,7 @@ export async function updateKitchenTicketStatus(
     const view = toTicketView(ticket);
 
     await broadcastEvent({
-      type: status === KitchenTicketStatus.DONE ? "KITCHEN_DONE" : "KITCHEN_UPDATE",
+      type: status === "DONE" ? "KITCHEN_DONE" : "KITCHEN_UPDATE",
       ticket: view,
     });
 

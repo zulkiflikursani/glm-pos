@@ -1,15 +1,14 @@
 "use client";
 
-import { UserRole } from "@prisma/client";
 import { Loader2, Pencil, Plus, Trash2, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
 import { createUser, deleteUser, updateUser } from "@/app/admin/actions";
 import { ROLE_LABELS } from "@/lib/roles";
-import type { AdminUser } from "@/types";
+import type { AdminUser, UserRole } from "@/types";
 
-const ROLES: UserRole[] = ["ADMIN", "KASIR", "PELAYAN"];
+const ROLES: UserRole[] = ["ADMIN", "KASIR", "PELAYAN", "DAPUR"];
 
 type UserManagerProps = {
   users: AdminUser[];
@@ -150,9 +149,7 @@ export function UserManager({ users }: UserManagerProps) {
             <input
               type="checkbox"
               checked={form.isActive}
-              onChange={(e) =>
-                setForm({ ...form, isActive: e.target.checked })
-              }
+              onChange={(e) => setForm({ ...form, isActive: e.target.checked })}
               className="rounded border-stone-300"
             />
             Akun aktif

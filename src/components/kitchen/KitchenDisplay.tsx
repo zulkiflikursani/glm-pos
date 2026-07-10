@@ -1,36 +1,46 @@
 "use client";
 
-import { KitchenTicketStatus } from "@prisma/client";
 import { ChefHat, Clock, CheckCircle2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState, useTransition, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useState,
+  useTransition,
+  type ReactNode,
+} from "react";
 
 import {
   getKitchenTickets,
   updateKitchenTicketStatus,
 } from "@/app/kitchen/actions";
-import type { KitchenTicketView } from "@/types";
+import type { KitchenTicketView, KitchenTicketStatus } from "@/types";
 
 const STATUS_CONFIG: Record<
   KitchenTicketStatus,
-  { label: string; color: string; next?: KitchenTicketStatus; nextLabel?: string }
+  {
+    label: string;
+    color: string;
+    next?: KitchenTicketStatus;
+    nextLabel?: string;
+  }
 > = {
   PENDING: {
     label: "Menunggu",
     color: "bg-yellow-100 text-yellow-800 border-yellow-200",
-    next: KitchenTicketStatus.PREPARING,
+    next: "PREPARING",
     nextLabel: "Mulai Masak",
   },
   PREPARING: {
     label: "Dimasak",
     color: "bg-blue-100 text-blue-800 border-blue-200",
-    next: KitchenTicketStatus.READY,
+    next: "READY",
     nextLabel: "Siap",
   },
   READY: {
     label: "Siap Antar",
     color: "bg-green-100 text-green-800 border-green-200",
-    next: KitchenTicketStatus.DONE,
+    next: "DONE",
     nextLabel: "Selesai",
   },
   DONE: {
@@ -121,9 +131,7 @@ export function KitchenDisplay({ initialTickets }: KitchenDisplayProps) {
         </div>
       </div>
 
-      {isPending && (
-        <p className="text-sm text-stone-500">Memperbarui...</p>
-      )}
+      {isPending && <p className="text-sm text-stone-500">Memperbarui...</p>}
 
       <div className="grid gap-6 lg:grid-cols-3">
         <TicketColumn

@@ -1,12 +1,11 @@
 "use client";
 
-import { PaymentMethod } from "@prisma/client";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { useState } from "react";
 
 import { getOrderDetail } from "@/app/dashboard/actions";
 import { formatIDR } from "@/lib/format";
-import type { OrderHistoryItem } from "@/types";
+import type { OrderHistoryItem, PaymentMethod } from "@/types";
 
 const PAYMENT_LABELS: Record<PaymentMethod, string> = {
   CASH: "Tunai",

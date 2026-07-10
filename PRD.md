@@ -13,7 +13,7 @@ Aplikasi POS (Point of Sale) berbasis web yang dirancang khusus untuk restoran, 
 ## 3. target Pengguna
 - **Kasir / Operator:** Menggunakan iPad untuk input pesanan dan memproses pembayaran.
 - **Pelayan / Waitress:** Menggunakan handphone untuk mencatat pesanan langsung dari meja pelanggan.
-- **Dapur** Menentukan posisi pesanan sudah beradai posis proses atau selesai.
+- **Dapur / Kitchen:** Menentukan posisi pesanan sudah berada pada posisi proses (preparing) atau selesai (ready/done). Melihat Kitchen Display System (KDS) real-time.
 - **Pemilik Usaha:** Memantau laporan penjualan harian dari perangkat apa pun.
 
 ## 4. Fitur Utama (MVP - Minimum Viable Product)

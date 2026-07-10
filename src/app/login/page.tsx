@@ -15,6 +15,7 @@ export default function LoginPage() {
           <p className="mt-1">admin / admin123</p>
           <p>kasir / kasir123</p>
           <p>pelayan / pelayan123</p>
+          <p>dapur / dapur123</p>
         </div>
       </div>
     </div>

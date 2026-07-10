@@ -1,0 +1,392 @@
+PRODUCT REQUIREMENTS DOCUMENT (PRD)
+
+Nama Produk: GLM-Pos (Point of Sale & Stock Management)
+
+Versi: 1.0.0
+Tanggal: 8 Juli 2026
+Platform: Web Application (Responsive: Mobile, Tablet, Desktop)
+Tech Stack: Next.js (Frontend & Fullstack API), MySQL (Database)
+Target User: Pemilik Usaha, Kasir, Waiter, Kitchen Staff, Manajer.
+
+1. Latar Belakang & Tujuan
+
+Banyak UMKM kuliner (kafe dan restoran) masih menggunakan aplikasi POS terpisah dari sistem manajemen stok, yang menyebabkan discrepancy (perbedaan data) antara penjualan dan sisa bahan baku.
+
+Tujuan: GLM-Pos dibuat untuk mengintegrasikan proses transaksi penjualan (kasir) dengan manajemen inventaris secara real-time​. Dengan arsitektur multi-user​, tugas dapat dibagi sesuai peran (Kasir hanya melayani transaksi, Kitchen hanya melihat order, Manajer melihat laporan). Aplikasi ini dirancang responsif agar dapat diakses dari smartphone (untuk waiter di lapangan), iPad (untuk kasir), dan Laptop (untuk back-office​).
+
+2. LingkupProduk (Scope)
+
+2.1 In-Scope (Versi 1.0)
+
+Sistem autentikasi & manajemen peran pengguna (Multi-User).
+Manajemen Menu & Kategori.
+Modul Kasir (POS) dengan keranjang belanja.
+Modul Kitchen Display System (KDS) untuk manage orderan.
+Manajemen Stok Bahan Baku & Resep (Receipe / Bill of Materials).
+Laporan Penjualan & Stok.
+UI/UX Responsif (Mobile, Tablet, Desktop).
+2.2 Out-of-Scope (Future Release)
+
+Integrasi pembayaran QRIS / EDC langsung.
+Manajemen meja reservasi (Table Management tingkat lanjut).
+Integrasi pihak ketiga (GoFood, GrabFood).
+Aplikasi Native (iOS/Android). 3. Pengguna Sistem (User Roles)
+
+Aplikasi ini mendukung Multi-User dengan Role-Based Access Control (RBAC):
+
+Administrator / Owner: Akses penuh ke semua modul, pengaturan aplikasi, dan melihat semua laporan keuangan/stok.
+Manager: Mengelola stok, melakukan stock opname​, melihat laporan penjualan, dan mengelola menu.
+Kasir (Cashier): Akses ke modul POS untuk membuat pesanan, menerima pembayaran, dan mencetak struk.
+Pelayan (Waiter): Meng input pesanan langsung dari meja pelanggan menggunakan HP mereka.
+Dapur (Kitchen): Melihat daftar pesanan yang masuk, mengubah status pesanan (Dimasak / Siap Disajikan). 4. Kebutuhan Fungisonal (Functional Requirements)
+
+4.1 Autentikasi & Otorisasi
+
+Login menggunakan Email & Password.
+Sistem Session / JWT Token untuk menjaga login di berbagai device.
+Pembatasan akses menu berdasarkan peran (Role).
+4.2 Manajemen Menu & Resep (Recipes)
+
+CRUD Menu: Nama menu, Harga, Kategori (Makanan, Minuman, Snack), dan Gambar.
+Manajemen Resep (BOM): Setiap menu terhubung dengan bahan baku. (Contoh: Menu "Kopi Susu" membutuhkan 20ml Sirup Gula, 1 sachet Espresso, 150ml Susu).
+Tujuan: Setiap kali menu terjual, stok bahan baku otomatis berkurang.
+4.3 Modul Kasir (Point of Sale)
+
+Tampilan grid menu berdasarkan kategori ( Responsive untuk sentuhan layar iPad/Tablet).
+Pencarian menu cepat.
+Keranjang belanja (Cart) dengan fitur: Tambah, Kurangi jumlah, Hapus item, Tambahkan catatan (misal: "Tanpa es", "Pedas").
+Pilihan mode makan: Dine-in (pilih nomor meja) / Takeaway.
+Kalkulasi otomatis: Subtotal, Pajak (Tax), Biaya service, Diskon.
+Proses pembayaran: Tunai (Cash) / Non-Tunai (QRIS/Debit - input manual).
+Cetak struk thermal (menggunakan Web Bluetooth API atau Local Printer Server​).
+4.4 Kitchen Display System (KDS)
+
+Tampilan khusus untuk dapur (bisa dibuka di tablet/iPad).
+Antrian pesanan masuk secara real-time (Gunakan polling atau WebSocket​).
+Menampilkan detail item pesanan dan catatan dari pelanggan.
+Tombol "Mulai Masak" dan "Pesanan Siap" untuk update status ke kasir.
+4.5 Manajemen Stok Barang (Inventory)
+
+CRUD Bahan Baku: Nama bahan (contoh: Susu sapi, Gula, Kopi bean), Satuan (ml, gr, pcs), Jumlah stok.
+Stok Masuk: Mencatat pembelian bahan baku dari supplier (menambah stok).
+Penyesuaian Stok (Stock Opname): fitur untuk mengkoreksi stok jika ada bahan yang basi/hilang.
+Alert Stok Menipis: Notifikasi jika stok bahan mencapai batas minimum (Minimum Reorder Point).
+4.6 Laporan (Reporting)
+
+Laporan Penjualan: Total pendapatan harian, mingguan, bulanan. Grafik penjualan (menggunakan Chart.js/Recharts).
+Laporan Stok: Riwayat keluar/masuk bahan baku, Sisa stok saat ini, Prediksi kapan stok akan habis.
+Laporan Item Terlaris: Menu apa yang paling sering dibeli dalam periode tertentu.
+Export: Export laporan ke format Excel/CSV atau PDF. 5. Kebutuhan Non-Fungsional (Non-Functional Requirements)
+
+5.1 Teknologi & Arsitektur
+
+Frontend & Backend: Next.js (App Router direkomendasikan) dengan Server Actions atau API Routes.
+Database: MySQL (RDBMS) untuk menjamin ACID compliance terutama pada transaksi penjualan dan pengurangan stok.
+ORM: Prisma atau Drizzle ORM untuk interaksi dengan MySQL yang lebih aman dan type-safe​.
+State Management: Zustand atau React Context (untuk state lokal kasir seperti Cart).
+Styling: Tailwind CSS dengan komponen dari Shadcn UI untuk memudahkan pembuatan UI yang konsisten dan modern.
+5.2 UI/UX & Desain
+
+Responsivitas:
+Mobile (Smartphone): Tampilan minimalis, fokus pada workflow waiter (input order cepat).
+Tablet (iPad): Fokus pada tampilan Kasir (Grid menu yang besar dan bisa disentuh) dan KDS dapur.
+Desktop (Laptop/PC): Fokus pada back-office (Laporan, Input Stok, Master Menu).
+Tema Warna "Kekinian":
+Menggunakan skema warna Modern Dark Mode atau Soft Pastel Light Mode​.
+Warnadidasar: Slate / Zinc (Abu-abu netral).
+Warna aksen primer: Sky Blue atau Indigo untuk kesan teknologi dan bersih.
+Warna sekunder/Status: Emerald (Sukses/Hijau), Amber (Warning/Kuning), Rose (Danger/Error).
+Interaksi: Hover effects, transisi halus, skeleton loading untuk pengalaman pengguna yang premium.
+5.3 Keamanan & Performa
+
+Gunakan Hashing (Bcrypt/Argon2) untuk password pengguna.
+Validasi input di sisi server (Zod) untuk mencegah SQL Injection.
+Optimasi gambar menu menggunakan komponen <Image> dari Next.js.
+Menerapkan Caching untuk data statis (seperti daftar menu) menggunakan Next.js caching features. 6. Skema Database (Sederhana)
+
+Berikut adalah estimasi tabel utama di MySQL:
+
+users: id, name, email, password_hash, role, created_at.
+categories: id, name (e.g., Coffee, Food).
+products: id, category_id, name, price, image_url, is_available.
+raw_materials: id, name, unit (e.g., 'ml', 'gr'), stock, min_stock.
+recipes: id, product_id, raw_material_id, quantity_used.
+transactions: id, invoice_number, user_id (kasir), table_number, total_price, tax, discount, payment_method, status (paid, pending), created_at.
+transaction_details: id, transaction_id, product_id, quantity, price_at_sale, notes.
+stock_movements: id, raw_material_id, type (in/out), quantity, description, created_at. 7. Epics & User Stories (Prioritas MVP)
+
+Epic 1: Setup & Master Data
+
+Sebagai Admin, saya ingin membuat akun untuk kasir dan pelayan, agar saya bisa membatasi akses mereka.
+Sebagai Admin, saya ingin menambahkan menu, harga, dan kategori, agar kasir bisa menjualnya.
+Sebagai Admin, saya ingin menginput resep (bahan baku) untuk setiap menu, agar stok otomatis berkurang saat menu terjual.
+Epic 2: Operasional Kasir & Dapur
+
+Sebagai Waiter, saya ingin memesan menggunakan HP saya, agar saya tidak perlu antri di kasir.
+Sebagai Kasir, saya ingin membuka modul POS di iPad, agar saya bisa cepat memproses antrian dengan sekali sentuh.
+Sebagai Kitchen, saya ingin melihat pesanan yang masuk di tablet dapur, agar saya tahu apa yang harus dimasak.
+Epic 3: Manajemen Stok & Laporan
+
+Sebagai Manager, saya ingin melihat sisa stok susu di gudang secara real-time, agar saya bisa langsung memesan ke supplier jika menipis.
+Sebagai Owner, saya ingin melihat pendapatan hari ini melalui dashboard di Laptop saya, agar saya tahu performa restoran.
+Epic 4: Pengalaman Visual
+
+Sebagai Pengguna, saya ingin tampilan aplikasi mendukung mode gelap (Dark mode) dan warna yang modern, agar mata tidak lelah saat digunakan berjam-jam. 8. Alur Kerja Ideal (User Flow)
+
+Waiter datang ke meja, membuka GLM-Pos dari HP, login sebagai waiter, memilih meja, dan menginput pesanan. Pesanan tersimpan ke sistem.
+Kitchen melihat pesanan masuk di iPad di area dapur. Mereka memasak dan menekan tombol "Siap".
+Kasir melihat bahwa pesanan sudah siap, mengkonfirmasi pembayaran di tablet kasir, dan mencetak struk.
+Sistem mencatat transaksi selesai, dan otomatis mengurangi stok bahan baku dari gudang sesuai resep menu yang terjual.
+Manager membuka laptop malam hari, melihat grafik penjualan dan menerima alert bahwa stok kopi habis besok, lalu merestock.
+
+TAMBAHAN PRD: UIUX & SKEMA DATABASE DETAIL
+
+Nama Produk: GLM-Pos
+
+1. SPESIFIKASI UI/UX & WIREFRAME (Text-Based)
+
+1.1. Sistem Desain (Design System)
+
+Untuk tampilan "kekinian", kami akan menggunakan pendekatan Modern Dashboard UI dengan sentuhan Glassmorphism (kaca buram) pada card tertentu dan Soft Shadows​.
+
+Font: Inter (untuk teks UI) dan Plus Jakarta Sans (untuk Heading/Logo).
+Warna (Light Mode):
+Background: #F8FAFC (Slate 50) sangat lembut di mata.
+Card/Panel: #FFFFFF dengan border tipis #F1F5F9.
+Primary (Aksen Tombol/Highlight): #6366F1 (Indigo 500) / Gradient ke #8B5CF6 (Violet 500).
+Text Utama: #0F172A (Slate 900).
+Status Sukses (Avail/Stok Aman): #10B981 (Emerald 500).
+Status Warning (Stok Menipis): #F59E0B (Amber 500).
+Status Danger (Habis): #EF4444 (Red 500).
+Warna (Dark Mode):
+Background: #09090B (Zinc 950).
+Card/Panel: #18181B (Zinc 900).
+Text Utama: #FAFAFA (Zinc 50).
+1.2. Layout Responsif per Device
+
+A. Tampilan Mobile (Smartphone) - Fokus Waiter
+
+Navigasi: Bottom Navigation Bar (ikon: Kasir​, Pesanan Aktif​, Profil​).
+Halaman Kasir:
+Search bar di paling atas.
+Kategori menu dalam bentuk horizontal scroll chips (Makanan, Minuman, dll).
+Grid menu 2 kolom (Kartu menu: Foto kecil, Nama, Harga, Tombol "+").
+Tombol mengambang (Floating Action Button) di kanan bawah: "Lihat Keranjang (3)".
+B. Tampilan Tablet (iPad) - Fokus Kasir & Dapur
+
+Navigasi: Sidebar di kiri (bisa di-​collapse​).
+Halaman Kasir:
+Layout Split Screen (Grid 2 kolom besar).
+Kiri (60% lebar): Kategori & Pencarian di atas, Grid Menu 3-4 kolom dengan kartu besar (mudah disentuh).
+Kanan (40% lebar): Cart Panel (Daftar item, tambah/kurang qty, catatan, total bayar, tombol "Bayar" besar di bawah).
+Halaman Kitchen Display System (KDS):
+Layout Kanban Board (Horizontal scrolling).
+Tiap card = 1 Order. Card berisi: No Meja, Waktu, Item Pesanan. Tombol "Start Cook" dan "Done".
+C. Tampilan Desktop (Laptop/PC) - Fokus Back-Office (Admin/Manager)
+
+Navigasi: Top Bar (Logo, Profil) + Sidebar Left (Menu: Dashboard, POS, Menu, Stok, Laporan, Pengaturan).
+Dashboard:
+4 Kartu Statistik di atas (Total Pendapatan Hari Ini, Transaksi Count, Stok Menipis Count, Pending Orders).
+Grafik Area (Penjualan 7 hari terakhir).
+Tabel "Top 5 Menu Terlaris".
+Halaman Manajemen Stok:
+Tabel Data Grid canggih dengan filter, search, dan inline edit untuk update stok ceppat. 2. SKEMA DATABASE DETAIL (MYSQL)
+
+Berikut adalah script SQL lengkap untuk MySQL. Skema ini sudah memperhitungkan Relational Integrity​, Auto-decrement stok via Triggers​, dan Multi-user​.
+
+2.1. Pembuatan Database & Tabel
+
+sql
+
+-- Buat Database
+CREATE DATABASE IF NOT EXISTS glm_pos;
+USE glm_pos;
+-- 1. Tabel Users (Multi-User & RBAC)
+CREATE TABLE users (
+id INT AUTO_INCREMENT PRIMARY KEY,
+name VARCHAR(100) NOT NULL,
+email VARCHAR(100) UNIQUE NOT NULL,
+password_hash VARCHAR(255) NOT NULL,
+role ENUM('ADMIN', 'MANAGER', 'CASHIER', 'WAITER', 'KITCHEN') NOT NULL DEFAULT 'WAITER',
+created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+-- 2. Tabel Categories
+CREATE TABLE categories (
+id INT AUTO_INCREMENT PRIMARY KEY,
+name VARCHAR(50) NOT NULL,
+description TEXT,
+created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+-- 3. Tabel Products (Menu/Apuran Jadi)
+CREATE TABLE products (
+id INT AUTO_INCREMENT PRIMARY KEY,
+category_id INT,
+name VARCHAR(100) NOT NULL,
+description TEXT,
+price DECIMAL(10, 2) NOT NULL,
+image_url VARCHAR(255),
+is_available BOOLEAN DEFAULT TRUE,
+created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL
+);
+-- 4. Tabel Raw Materials (Bahan Baku)
+CREATE TABLE raw_materials (
+id INT AUTO_INCREMENT PRIMARY KEY,
+name VARCHAR(100) NOT NULL,
+unit VARCHAR(20) NOT NULL, -- Contoh: 'ml', 'gr', 'pcs'
+stock DECIMAL(10, 2) DEFAULT 0.00,
+min_stock DECIMAL(10, 2) DEFAULT 0.00, -- Alert stok menipis
+created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+-- 5. Tabel Recipes (Resep / Bill of Materials)
+-- Menghubungkan Product dengan Raw Material
+CREATE TABLE recipes (
+id INT AUTO_INCREMENT PRIMARY KEY,
+product_id INT NOT NULL,
+raw_material_id INT NOT NULL,
+quantity_used DECIMAL(10, 2) NOT NULL, -- Jumlah bahan baku yg dipakai per 1 porsi menu
+FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
+FOREIGN KEY (raw_material_id) REFERENCES raw_material(id) ON DELETE RESTRICT
+);
+-- 6. Tabel Transactions (Kepala Transaksi/Order)
+CREATE TABLE transactions (
+id INT AUTO_INCREMENT PRIMARY KEY,
+invoice_number VARCHAR(50) UNIQUE NOT NULL,
+cashier_id INT NOT NULL, -- User yang melakukan transaksi
+waiter_id INT NULL, -- User waiter (opsional, jika pesanan dari waiter)
+table_number VARCHAR(20),
+status ENUM('PENDING', 'PAID', 'CANCELLED') NOT NULL DEFAULT 'PAID',
+subtotal DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
+discount DECIMAL(10, 2) DEFAULT 0.00,
+tax DECIMAL(10, 2) DEFAULT 0.00,
+service_charge DECIMAL(10, 2) DEFAULT 0.00,
+total_amount DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
+payment_method ENUM('CASH', 'QRIS', 'DEBIT', 'CREDIT') DEFAULT 'CASH',
+notes TEXT,
+created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+FOREIGN KEY (cashier_id) REFERENCES users(id) ON DELETE RESTRICT,
+FOREIGN KEY (waiter_id) REFERENCES users(id) ON DELETE SET NULL
+);
+-- 7. Tabel Transaction Details (Item Transaksi/Item Pesanan)
+CREATE TABLE transaction_details (
+id INT AUTO_INCREMENT PRIMARY KEY,
+transaction_id INT NOT NULL,
+product_id INT NOT NULL,
+quantity INT NOT NULL DEFAULT 1,
+price_at_sale DECIMAL(10, 2) NOT NULL, -- Harga menu saat itu (jika harga berubah di masa depan, data transaksi lalu tidak rusak)
+notes VARCHAR(255), -- Contoh: "Tanpa Es", "Level Pedas 5"
+FOREIGN KEY (transaction_id) REFERENCES transactions(id) ON DELETE CASCADE,
+FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE RESTRICT
+);
+-- 8. Tabel Stock Movements (Riwayat keluar masuk stok)
+CREATE TABLE stock_movements (
+id INT AUTO_INCREMENT PRIMARY KEY,
+raw_material_id INT NOT NULL,
+type ENUM('IN', 'OUT', 'ADJUSTMENT') NOT NULL,
+quantity DECIMAL(10, 2) NOT NULL,
+description VARCHAR(255), -- Contoh: 'Supplier order', 'Wastage/Sample', 'Auto deduct from sale ID X'
+created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+FOREIGN KEY (raw_material_id) REFERENCES raw_material(id) ON DELETE RESTRICT
+);
+2.2. Trigger SQL ( Otomatis Kurangi Stok saat Transaksi )
+
+Agar aplikasi Next.js tidak perlu melakukan logika pengurangan stok secara manual (menghindari race-condition saat banyak kasir_transaksi bersamaan), kita gunakan MySQL Trigger​.
+
+sql
+
+DELIMITER //
+CREATE TRIGGER trg_after_transaction_detail_insert
+AFTER INSERT ON transaction_details
+FOR EACH ROW
+BEGIN
+DECLARE done INT DEFAULT FALSE;
+DECLARE r_mat_id INT;
+DECLARE r_qty DECIMAL(10,2);
+
+    -- Cursor untuk mencari bahan baku dari recipe product yang baru dijual
+    DECLARE recipe_cur CURSOR FOR
+        SELECT raw_material_id, quantity_used
+        FROM recipes
+        WHERE product_id = NEW.product_id;
+
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+    OPEN recipe_cur;
+
+    read_loop: LOOP
+        FETCH recipe_cur INTO r_mat_id, r_qty;
+        IF done THEN
+            LEAVE read_loop;
+        END IF;
+
+        -- Hitung total bahan yang dipakai = qty item * qty resep
+        SET @total_used = NEW.quantity * r_qty;
+
+        -- Update stok material (Kurangi)
+        UPDATE raw_materials
+        SET stock = stock - @total_used
+        WHERE id = r_mat_id;
+
+        -- Catat pergerakan stok di stock_movements
+        INSERT INTO stock_movements (raw_material_id, type, quantity, description)
+        VALUES (r_mat_id, 'OUT', @total_used, CONCAT('Auto deduct: Sale Transaction #', NEW.transaction_id));
+
+    END LOOP;
+
+    CLOSE recipe_cur;
+
+END //
+DELIMITER ;
+2.3. Contoh Data Awal (Seeding Data)
+
+sql
+
+-- Insert User
+INSERT INTO users (name, email, password_hash, role) VALUES
+('Owner Budi', 'owner@glmpos.com', 'hashed_password_pegawai', 'ADMIN'),
+('Kasir Sinta', 'kasir@glmpos.com', 'hashed_password_pegawai', 'CASHIER'),
+('Chef Joko', 'chef@glmpos.com', 'hashed_password_pegawai', 'KITCHEN');
+-- Insert Category
+INSERT INTO categories (name, description) VALUES
+('Coffee', 'Minuman berbasis kopi'),
+('Food', 'Makanan ringan dan berat');
+-- Insert Product
+INSERT INTO products (category_id, name, price, image_url, is_available) VALUES
+(1, 'Es Kopi Susu Gula Aren', 25000, '/img/eskopisusu.jpg', TRUE),
+(2, 'Nasi Goreng Spesial', 30000, '/img/nasgor.jpg', TRUE);
+-- Insert Raw Material
+INSERT INTO raw_materials (name, unit, stock, min_stock) VALUES
+('Susu UHT Full Cream', 'ml', 5000.00, 1000.00),
+('Biji Kopi Robusta', 'gr', 1000.00, 200.00),
+('Gula Aren Cair', 'ml', 2000.00, 500.00),
+('Nasi Putih', 'porsi', 50.00, 10.00),
+('Bumbu Nasi Goreng', 'pcs', 100.00, 20.00);
+-- Insert Recipe (Es Kopi Susu = Susu 150ml + Kopi 20gr + Gula Aren 20ml)
+-- Asumsi product_id 1 = Es Kopi Susu, product_id 2 = Nasi Goreng
+-- Asumsi raw_material_id 1 = Susu, 2 = Kopi, 3 = Gula Aren, 4 = Nasi, 5 = Bumbu
+INSERT INTO recipes (product_id, raw_material_id, quantity_used) VALUES
+(1, 1, 150.00), -- Es Kopi Susu butuh 150ml Susu
+(1, 2, 20.00), -- Es Kopi Susu butuh 20gr Kopi
+(1, 3, 20.00), -- Es Kopi Susu butuh 20ml Gula Aren
+(2, 4, 1.00), -- Nasi Goreng butuh 1 porsi Nasi
+(2, 5, 1.00); -- Nasi Goreng butuh 1 sachet Bumbu 3. Panduan Implementasi Sisi Frontend (Next.js)
+
+Untuk menerjemahkan skema di atas ke Next.js, berikut alur kerja recomendasi:
+
+Setup ORM: Gunakan Prisma ORM atau Drizzle​. Buat file schema.prisma yang merefleksikan tabel SQL di atas secara identik. Jalankan prisma db pull untuk generate model otomatis dari MySQL ini.
+Server Actions (Next.js App Router):
+Buat file actions/transaction.ts.
+Fungsi createTransaction(data) akan menerima cart items dari frontend, melakukan INSERT ke tabel transactions dan transaction_details. Setelah commit, MySQL Trigger akan otomatis menjalankan update stoknya.
+API Routes (Jika diperlukan):
+/api/products -> untuk fetch menu di kasir.
+/api/stock/[[...slug]] -> untuk CRUD stok di backoffice.
+UI Components (Shadcn UI + Tailwind):
+Kasir Page (/pos): Gunakan layout Flexbox. Kiri grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4, Kanan panel cart w-full md:w-2/5.
+Gunakan komponen Dialog untuk popup pembayaran.
+Gunakan toast dari sonner atau react-hot-toast untuk notifikasi sukses transaksi atau stok habis.
+Dengan tambahan ini, PRD GLM-Pos kini sudah berisi:
+
+Kebutuhan Bisnis & Aturan (Bagian 1 PRD sebelumnya)
+Desain UI/UX responsif secara konseptual
+Skema Data lengkap dengan logika otomatis (Trigger) Sehingga para developer bisa langsung copy-paste struktur DB ke MySQL mereka dan mulai generate kode dari Next.js.

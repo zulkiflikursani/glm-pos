@@ -1,19 +1,18 @@
 "use server";
 
-import { OrderStatus } from "@prisma/client";
-
 import { getDateRange } from "@/lib/date";
 import { prisma } from "@/lib/prisma";
 import type {
   DashboardStats,
   OrderHistoryItem,
+  OrderStatus,
   TopProduct,
 } from "@/types";
 
 function completedOrderFilter(dateFrom: string, dateTo: string) {
   const { start, end } = getDateRange(dateFrom, dateTo);
   return {
-    status: OrderStatus.COMPLETED,
+    status: "COMPLETED" as OrderStatus,
     createdAt: { gte: start, lte: end },
   };
 }
@@ -32,7 +31,8 @@ export async function getDashboardStats(
 
   const totalRevenue = aggregate._sum.total ?? 0;
   const orderCount = aggregate._count.id;
-  const averageOrder = orderCount > 0 ? Math.round(totalRevenue / orderCount) : 0;
+  const averageOrder =
+    orderCount > 0 ? Math.round(totalRevenue / orderCount) : 0;
 
   return { totalRevenue, orderCount, averageOrder };
 }
@@ -48,7 +48,7 @@ export async function getTopProducts(
     by: ["productName"],
     where: {
       order: {
-        status: OrderStatus.COMPLETED,
+        status: "COMPLETED" as OrderStatus,
         createdAt: { gte: start, lte: end },
       },
     },

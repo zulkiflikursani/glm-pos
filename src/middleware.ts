@@ -41,7 +41,7 @@ export async function middleware(request: NextRequest) {
     const { payload } = await jwtVerify(token, SECRET);
     const role = payload.role as string;
 
-    if (!canAccessRoute(pathname, role as "ADMIN" | "KASIR" | "PELAYAN")) {
+    if (!canAccessRoute(pathname, role as "ADMIN" | "KASIR" | "PELAYAN" | "DAPUR")) {
       return NextResponse.redirect(new URL("/", request.url));
     }
 

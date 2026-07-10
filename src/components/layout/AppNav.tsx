@@ -1,6 +1,5 @@
 "use client";
 
-import type { UserRole } from "@prisma/client";
 import {
   BarChart3,
   ChefHat,
@@ -10,6 +9,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import type { UserRole } from "@/types";
 
 import { logout } from "@/app/login/actions";
 import { ROLE_LABELS, type SessionUser } from "@/lib/roles";
@@ -20,9 +20,30 @@ const NAV_ITEMS: {
   icon: typeof ShoppingBag;
   roles: UserRole[];
 }[] = [
-  { href: "/", label: "Kasir", icon: ShoppingBag, roles: ["ADMIN", "KASIR", "PELAYAN"] },
-  { href: "/dashboard", label: "Laporan", icon: BarChart3, roles: ["ADMIN", "KASIR"] },
-  { href: "/kitchen", label: "Dapur", icon: ChefHat, roles: ["ADMIN", "KASIR"] },
+  {
+    href: "/",
+    label: "Kasir",
+    icon: ShoppingBag,
+    roles: ["ADMIN", "KASIR", "PELAYAN"],
+  },
+  {
+    href: "/dashboard",
+    label: "Laporan",
+    icon: BarChart3,
+    roles: ["ADMIN", "KASIR"],
+  },
+  {
+    href: "/tables",
+    label: "Meja",
+    icon: ShoppingBag,
+    roles: ["ADMIN", "KASIR", "PELAYAN"],
+  },
+  {
+    href: "/kitchen",
+    label: "Dapur",
+    icon: ChefHat,
+    roles: ["ADMIN", "KASIR", "DAPUR", "PELAYAN"],
+  },
   { href: "/admin", label: "Admin", icon: Settings, roles: ["ADMIN"] },
 ];
 

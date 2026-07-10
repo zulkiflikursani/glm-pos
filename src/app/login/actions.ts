@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 
 import { createSession, deleteSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import type { UserRole } from "@/types";
 
 export async function login(
   _prev: { error?: string } | null,
@@ -32,7 +33,7 @@ export async function login(
     userId: user.id,
     username: user.username,
     name: user.name,
-    role: user.role,
+    role: user.role as UserRole,
   });
 
   redirect("/");

@@ -1,22 +1,21 @@
 "use client";
 
-import { PaymentMethod } from "@prisma/client";
 import { Loader2, X } from "lucide-react";
 import { useState, useTransition } from "react";
 
 import { createOrder } from "@/app/actions";
 import { formatIDR, parseIDRInput } from "@/lib/format";
 import { useCart } from "@/store/cartStore";
-import type { OrderResult } from "@/types";
+import type { OrderResult, PaymentMethod } from "@/types";
 
 import { Receipt } from "./Receipt";
 
 const PAYMENT_METHODS: { value: PaymentMethod; label: string }[] = [
-  { value: PaymentMethod.CASH, label: "Tunai" },
-  { value: PaymentMethod.QRIS, label: "QRIS" },
-  { value: PaymentMethod.DEBIT, label: "Debit" },
-  { value: PaymentMethod.CREDIT, label: "Kredit" },
-  { value: PaymentMethod.TRANSFER, label: "Transfer" },
+  { value: "CASH" as PaymentMethod, label: "Tunai" },
+  { value: "QRIS" as PaymentMethod, label: "QRIS" },
+  { value: "DEBIT" as PaymentMethod, label: "Debit" },
+  { value: "CREDIT" as PaymentMethod, label: "Kredit" },
+  { value: "TRANSFER" as PaymentMethod, label: "Transfer" },
 ];
 
 type CheckoutModalProps = {
@@ -26,10 +25,15 @@ type CheckoutModalProps = {
   tables: { id: string; number: number; status: string }[];
 };
 
-export function CheckoutModal({ open, onClose, onSuccess, tables }: CheckoutModalProps) {
+export function CheckoutModal({
+  open,
+  onClose,
+  onSuccess,
+  tables,
+}: CheckoutModalProps) {
   const { items, subtotal, tax, taxRate, total, clearCart } = useCart();
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(
-    PaymentMethod.CASH,
+    "CASH" as PaymentMethod,
   );
   const [cashInput, setCashInput] = useState("");
   const [tableId, setTableId] = useState("");
@@ -39,8 +43,7 @@ export function CheckoutModal({ open, onClose, onSuccess, tables }: CheckoutModa
   if (!open) return null;
 
   const cashReceived = parseIDRInput(cashInput);
-  const changeAmount =
-    paymentMethod === PaymentMethod.CASH ? cashReceived - total : 0;
+  const changeAmount = paymentMethod === "CASH" ? cashReceived - total : 0;
 
   const handleSubmit = () => {
     setError(null);
@@ -53,8 +56,7 @@ export function CheckoutModal({ open, onClose, onSuccess, tables }: CheckoutModa
           quantity: item.quantity,
         })),
         paymentMethod,
-        cashReceived:
-          paymentMethod === PaymentMethod.CASH ? cashReceived : undefined,
+        cashReceived: paymentMethod === "CASH" ? cashReceived : undefined,
         tableId: tableId || undefined,
       });
 
@@ -68,7 +70,7 @@ export function CheckoutModal({ open, onClose, onSuccess, tables }: CheckoutModa
       onClose();
       setCashInput("");
       setTableId("");
-      setPaymentMethod(PaymentMethod.CASH);
+      setPaymentMethod("CASH" as PaymentMethod);
     });
   };
 
@@ -146,7 +148,7 @@ export function CheckoutModal({ open, onClose, onSuccess, tables }: CheckoutModa
             ))}
           </div>
 
-          {paymentMethod === PaymentMethod.CASH && (
+          {paymentMethod === "CASH" && (
             <div className="mb-4">
               <label
                 htmlFor="cash-received"
